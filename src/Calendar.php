@@ -1,9 +1,9 @@
 <?php
 
-namespace Hubleto\App\External\WaiBlue\HlthcrAudits;
+namespace Hubleto\App\External\WaiBlue\OhsAudits;
 
 use Hubleto\App\Community\Workflow\Models\WorkflowStep;
-use Hubleto\App\External\WaiBlue\HlthcrCore\Services\CalendarAuthor;
+use Hubleto\App\External\WaiBlue\OhsCore\Services\CalendarAuthor;
 
 /**
  * Audits in the Hubleto calendar (legacy colour red): the audit date and the end of its validity.
@@ -13,7 +13,7 @@ class Calendar extends \Hubleto\App\Community\Calendar\Calendar
 {
   const COLOR = '#f5563d';
 
-  public string $translationContext = 'hubleto-app-external-waiblue-hlthcraudits-loader';
+  public string $translationContext = 'hubleto-app-external-waiblue-ohsaudits-loader';
   public string $translationContextInner = 'Calendar';
 
   public function getCalendarConfig(): array
@@ -28,7 +28,7 @@ class Calendar extends \Hubleto\App\Community\Calendar\Calendar
 
   public function loadEvent(int $id): array
   {
-    $audit = $this->getModel(Models\Audit::class)->record->prepareReadQuery()->where('hlthcr_audits.id', $id)->first();
+    $audit = $this->getModel(Models\Audit::class)->record->prepareReadQuery()->where('ohs_audits.id', $id)->first();
     if (!$audit) return [];
     return $audit->toArray();
   }
@@ -62,27 +62,27 @@ class Calendar extends \Hubleto\App\Community\Calendar\Calendar
   {
     $query = $this->getModel(Models\Audit::class)->record->prepareReadQuery()
       ->with(['BRANCH'])
-      ->where('hlthcr_audits.' . $dateColumn, '>=', $dateStart)
-      ->where('hlthcr_audits.' . $dateColumn, '<=', $dateEnd)
-      ->whereIn('hlthcr_audits.id_branch', function ($activeBranches) {
-        $activeBranches->select('id')->from('hlthcr_branches')->where('is_active', 1);
+      ->where('ohs_audits.' . $dateColumn, '>=', $dateStart)
+      ->where('ohs_audits.' . $dateColumn, '<=', $dateEnd)
+      ->whereIn('ohs_audits.id_branch', function ($activeBranches) {
+        $activeBranches->select('id')->from('ohs_branches')->where('is_active', 1);
       })
     ;
 
     $idAuthor = $this->getService(CalendarAuthor::class)->getAuthorIdToShow($filter);
     if ($idAuthor > 0) {
-      $query = $query->where('hlthcr_audits.id_hygienist', $idAuthor);
+      $query = $query->where('ohs_audits.id_hygienist', $idAuthor);
     }
 
     // Hubleto's calendar filter "not done" is 1, "done" is 2.
     $completedFilter = (int) ($filter['fCompleted'] ?? 0);
     if ($completedFilter == 1) {
       $query = $query->where(function ($notClosedQuery) use ($closedStepIds) {
-        $notClosedQuery->whereNotIn('hlthcr_audits.id_workflow_step', $closedStepIds)
-          ->orWhereNull('hlthcr_audits.id_workflow_step');
+        $notClosedQuery->whereNotIn('ohs_audits.id_workflow_step', $closedStepIds)
+          ->orWhereNull('ohs_audits.id_workflow_step');
       });
     }
-    if ($completedFilter == 2) $query = $query->whereIn('hlthcr_audits.id_workflow_step', $closedStepIds);
+    if ($completedFilter == 2) $query = $query->whereIn('ohs_audits.id_workflow_step', $closedStepIds);
 
     return $query->get()->toArray();
   }
@@ -95,10 +95,10 @@ class Calendar extends \Hubleto\App\Community\Calendar\Calendar
       'allDay' => true,
       'title' => $title,
       'color' => self::COLOR,
-      'source' => 'hlthcr-audits',
+      'source' => 'ohs-audits',
       'id_owner' => $audit['id_hygienist'],
       'completed' => in_array((int) $audit['id_workflow_step'], $closedStepIds) ? 1 : 0,
-      'url' => 'hlthcr-audits/audits/' . $audit['id'],
+      'url' => 'ohs/audits/audits/' . $audit['id'],
     ];
   }
 }

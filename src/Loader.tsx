@@ -5,10 +5,10 @@ import FormCustomizer from '@hubleto/react-ui/core/FormCustomizer';
 import { type FormMeta } from '@hubleto/react-ui/components/fc/FormInterfaces';
 import TableAudits from './Components/FC/TableAudits'
 
-const parentApp = 'Hubleto/App/External/WaiBlue/HlthcrAudits';
+const parentApp = 'Hubleto/App/External/WaiBlue/OhsAudits';
 const T = new Translator(parentApp + '/Loader', 'Loader');
 
-// "Audity" tab in the branch form (HlthcrBranches).
+// "Audity" tab in the branch form (OhsBranches).
 function mountBranchAuditsTab() {
   return {
     title: T.translate('Audits'),
@@ -19,12 +19,12 @@ function mountBranchAuditsTab() {
   };
 }
 
-class HlthcrAuditsApp extends App {
+class OhsAuditsApp extends App {
   init() {
     super.init();
-    globalThis.hubleto.registerReactComponent('HlthcrAuditsTableAudits', TableAudits);
-    FormCustomizer.addTab('FormBranch', 'hlthcr-audits', mountBranchAuditsTab);
+    globalThis.hubleto.registerReactComponent('OhsAuditsTableAudits', TableAudits);
+    FormCustomizer.addTab('FormBranch', 'ohs-audits', mountBranchAuditsTab);
   }
 }
 
-globalThis.hubleto.registerApp(parentApp, new HlthcrAuditsApp());
+globalThis.hubleto.registerApp(parentApp, new OhsAuditsApp());

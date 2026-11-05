@@ -1,6 +1,6 @@
 <?php
 
-namespace Hubleto\App\External\WaiBlue\HlthcrAudits\Models\Migrations;
+namespace Hubleto\App\External\WaiBlue\OhsAudits\Models\Migrations;
 
 use Hubleto\Framework\Migration;
 
@@ -17,13 +17,13 @@ class Audit_0002 extends Migration
 
   public function upgradeForeignKeys(): void
   {
-    $this->db->execute("ALTER TABLE `hlthcr_audits` DROP FOREIGN KEY `fk__hlthcr_audits__id_branch`");
-    $this->db->execute("ALTER TABLE `hlthcr_audits` ADD CONSTRAINT `fk__hlthcr_audits__id_branch` FOREIGN KEY (`id_branch`) REFERENCES `hlthcr_branches` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT");
+    $this->db->execute("ALTER TABLE `ohs_audits` DROP FOREIGN KEY `fk__ohs_audits__id_branch`");
+    $this->db->execute("ALTER TABLE `ohs_audits` ADD CONSTRAINT `fk__ohs_audits__id_branch` FOREIGN KEY (`id_branch`) REFERENCES `ohs_branches` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT");
   }
 
   public function downgradeForeignKeys(): void
   {
-    $this->db->execute("ALTER TABLE `hlthcr_audits` DROP FOREIGN KEY `fk__hlthcr_audits__id_branch`");
-    $this->db->execute("ALTER TABLE `hlthcr_audits` ADD CONSTRAINT `fk__hlthcr_audits__id_branch` FOREIGN KEY (`id_branch`) REFERENCES `hlthcr_branches` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT");
+    $this->db->execute("ALTER TABLE `ohs_audits` DROP FOREIGN KEY `fk__ohs_audits__id_branch`");
+    $this->db->execute("ALTER TABLE `ohs_audits` ADD CONSTRAINT `fk__ohs_audits__id_branch` FOREIGN KEY (`id_branch`) REFERENCES `ohs_branches` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT");
   }
 }

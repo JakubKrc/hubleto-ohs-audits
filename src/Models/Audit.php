@@ -1,22 +1,22 @@
 <?php
 
-namespace Hubleto\App\External\WaiBlue\HlthcrAudits\Models;
+namespace Hubleto\App\External\WaiBlue\OhsAudits\Models;
 
-use Hubleto\App\External\WaiBlue\HlthcrCore\Models\Traits\RefusesUnknownUser;
-use Hubleto\App\External\WaiBlue\HlthcrCore\Services\Roles;
-use Hubleto\App\External\WaiBlue\HlthcrCore\Controllers\Api\UserLookup;
+use Hubleto\App\External\WaiBlue\OhsCore\Models\Traits\RefusesUnknownUser;
+use Hubleto\App\External\WaiBlue\OhsCore\Services\Roles;
+use Hubleto\App\External\WaiBlue\OhsCore\Controllers\Api\UserLookup;
 use Hubleto\App\Community\Auth\Models\User;
-use Hubleto\App\External\WaiBlue\HlthcrBranches\Models\Branch;
-use Hubleto\App\External\WaiBlue\HlthcrCore\Services\MonthDates;
+use Hubleto\App\External\WaiBlue\OhsBranches\Models\Branch;
+use Hubleto\App\External\WaiBlue\OhsCore\Services\MonthDates;
 use Hubleto\Framework\Db\Column\Boolean;
 use Hubleto\Framework\Db\Column\Date;
 use Hubleto\Framework\Exceptions\RecordSaveException;
 use Hubleto\Framework\Db\Column\Lookup;
 use Hubleto\Framework\Db\Column\Text;
 use Hubleto\App\Community\Customers\Models\Customer;
-use Hubleto\App\External\WaiBlue\HlthcrClients\Services\CustomerColumns;
-use Hubleto\App\External\WaiBlue\HlthcrCore\Models\Traits\EmptyDatesAsNull;
-use Hubleto\App\External\WaiBlue\HlthcrCore\Models\Traits\StaysInOwnWorkflow;
+use Hubleto\App\External\WaiBlue\OhsClients\Services\CustomerColumns;
+use Hubleto\App\External\WaiBlue\OhsCore\Models\Traits\EmptyDatesAsNull;
+use Hubleto\App\External\WaiBlue\OhsCore\Models\Traits\StaysInOwnWorkflow;
 use Hubleto\App\Community\Workflow\Models\Workflow;
 use Hubleto\App\Community\Workflow\Models\WorkflowStep;
 
@@ -25,21 +25,21 @@ use Hubleto\App\Community\Workflow\Models\WorkflowStep;
  * the audit date plus the client's audit interval, unless typed. Its state is a workflow step: open or closed,
  * what both legacy apps share (MioMed closes an audit, Medison sets it "Ukončený").
  */
-class Audit extends \Hubleto\App\External\WaiBlue\HlthcrCore\Models\HlthcrModel
+class Audit extends \Hubleto\App\External\WaiBlue\OhsCore\Models\OhsModel
 {
   use RefusesUnknownUser;
   use EmptyDatesAsNull;
   use StaysInOwnWorkflow;
 
-  const WORKFLOW_GROUP = 'hlthcr_audits';
+  const WORKFLOW_GROUP = 'ohs_audits';
 
-  public string $table = 'hlthcr_audits';
+  public string $table = 'ohs_audits';
   public string $recordManagerClass = RecordManagers\Audit::class;
   // Date and branch, as in both legacy apps; the newest audits first.
   public ?string $lookupSqlValue = 'concat(date_format({%TABLE%}.date_executed, "%d.%m.%Y"),
-    ifnull(concat(" - ", (select name from hlthcr_branches where hlthcr_branches.id = {%TABLE%}.id_branch)), ""))';
+    ifnull(concat(" - ", (select name from ohs_branches where ohs_branches.id = {%TABLE%}.id_branch)), ""))';
   public string $lookupOrderBy = '{%TABLE%}.date_executed desc';
-  public ?string $lookupUrlDetail = 'hlthcr-audits/audits/{%ID%}';
+  public ?string $lookupUrlDetail = 'ohs/audits/audits/{%ID%}';
 
   public array $relations = [
     'BRANCH' => [ self::BELONGS_TO, Branch::class, 'id_branch', 'id' ],
@@ -201,7 +201,7 @@ class Audit extends \Hubleto\App\External\WaiBlue\HlthcrCore\Models\HlthcrModel
     if (!$branch) return $defaultMonths;
 
     $customer = $this->getModel(Customer::class)->record->where('id', $branch->id_customer)->first();
-    $clientMonths = $customer ? (int) $customer->hlthcr_audit_interval_months : 0;
+    $clientMonths = $customer ? (int) $customer->ohs_audit_interval_months : 0;
     if ($clientMonths > 0) return $clientMonths;
     return $defaultMonths;
   }

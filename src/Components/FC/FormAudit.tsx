@@ -7,7 +7,7 @@ import { dateToEUFormat } from '@hubleto/react-ui/components/fc/Inputs/DateTime'
 import { useRecordField } from '@hubleto/react-ui/components/fc/FormRecordStore';
 
 const componentName = 'FormAudit';
-const parentApp = 'Hubleto/App/External/WaiBlue/HlthcrAudits';
+const parentApp = 'Hubleto/App/External/WaiBlue/OhsAudits';
 const T = new Translator(parentApp + '/Loader', 'Components/' + componentName);
 
 // The branch stays as created (the server keeps it), so it is read-only after saving
@@ -42,7 +42,7 @@ const FormAudit = (props: FormProps) => <Form
   componentName={componentName}
   parentApp={parentApp}
   model={parentApp + '/Models/Audit'}
-  urlSlug='hlthcr-audits/audits'
+  urlSlug='ohs/audits/audits'
   renderTitle={() => <AuditTitle />}
   tabs={{default: {title: <b>{T.translate('Audit')}</b>, content: () => <TabDefault />}}}
   {...props}

@@ -1,17 +1,17 @@
-namespace: Hubleto\App\External\WaiBlue\HlthcrAudits
+namespace: Hubleto\App\External\WaiBlue\OhsAudits
 appType: external
 sidebarGroup: custom
-rootUrlSlug: hlthcr-audits
+rootUrlSlug: ohs/audits
 name: Audits
 icon: fas fa-clipboard-check
 author:
-  name: "Hlthcr"
-  nick: "hlthcr"
+  name: "Ohs"
+  nick: "ohs"
 highlight: Audits of client branches with their validity from the client audit interval, calendar and home panel.
 requires:
   - Hubleto\App\Community\Workflow
   - Hubleto\App\Community\Calendar
   - Hubleto\App\Community\Dashboards
-  - Hubleto\App\External\WaiBlue\HlthcrCore
-  - Hubleto\App\External\WaiBlue\HlthcrBranches
-  - Hubleto\App\External\WaiBlue\HlthcrClients
+  - Hubleto\App\External\WaiBlue\OhsCore
+  - Hubleto\App\External\WaiBlue\OhsBranches
+  - Hubleto\App\External\WaiBlue\OhsClients

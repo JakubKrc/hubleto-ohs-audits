@@ -7,7 +7,7 @@ interface TableAuditsProps extends TableProps {
 }
 
 const componentName = 'TableAudits'
-const parentApp = 'Hubleto/App/External/WaiBlue/HlthcrAudits'
+const parentApp = 'Hubleto/App/External/WaiBlue/OhsAudits'
 
 // The audits list and the "Audity" tab of the branch form.
 const TableAudits = (props: TableAuditsProps) => {
@@ -16,7 +16,7 @@ const TableAudits = (props: TableAuditsProps) => {
     componentName={componentName}
     parentApp={parentApp}
     model={parentApp + '/Models/Audit'}
-    baseUrlSlug='hlthcr-audits/audits'
+    baseUrlSlug='ohs/audits/audits'
     endpointParams={{idBranch: idBranch}}
     formDefaultValues={idBranch > 0 ? {id_branch: idBranch} : {}}
     formModalProps={{type: 'right wide'}}

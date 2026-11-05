@@ -1,14 +1,14 @@
 <?php
 
-namespace Hubleto\App\External\WaiBlue\HlthcrAudits\Models\RecordManagers;
+namespace Hubleto\App\External\WaiBlue\OhsAudits\Models\RecordManagers;
 
-use Hubleto\App\External\WaiBlue\HlthcrCore\Models\RecordManagers\Traits\DefaultOrder;
+use Hubleto\App\External\WaiBlue\OhsCore\Models\RecordManagers\Traits\DefaultOrder;
 use Hubleto\App\Community\Auth\Models\RecordManagers\User;
 use Hubleto\App\Community\Workflow\Models\RecordManagers\Workflow;
 use Hubleto\App\Community\Workflow\Models\RecordManagers\WorkflowStep;
-use Hubleto\App\External\WaiBlue\HlthcrBranches\Models\RecordManagers\Branch;
-use Hubleto\App\External\WaiBlue\HlthcrBranches\Models\RecordManagers\Traits\BelongsToBranch;
-use Hubleto\App\External\WaiBlue\HlthcrCore\Models\RecordManagers\Traits\WorkRecord;
+use Hubleto\App\External\WaiBlue\OhsBranches\Models\RecordManagers\Branch;
+use Hubleto\App\External\WaiBlue\OhsBranches\Models\RecordManagers\Traits\BelongsToBranch;
+use Hubleto\App\External\WaiBlue\OhsCore\Models\RecordManagers\Traits\WorkRecord;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Audit extends \Hubleto\Erp\RecordManager
@@ -17,7 +17,7 @@ class Audit extends \Hubleto\Erp\RecordManager
   use BelongsToBranch;
   use WorkRecord;
 
-  public $table = 'hlthcr_audits';
+  public $table = 'ohs_audits';
 
   const STATE_FILTER = 'fAuditState';
 

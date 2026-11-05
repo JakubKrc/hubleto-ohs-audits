@@ -1,8 +1,8 @@
 <?php
 
-namespace Hubleto\App\External\WaiBlue\HlthcrAudits\Controllers\Boards;
+namespace Hubleto\App\External\WaiBlue\OhsAudits\Controllers\Boards;
 
-use Hubleto\App\External\WaiBlue\HlthcrAudits\Models\Audit;
+use Hubleto\App\External\WaiBlue\OhsAudits\Models\Audit;
 
 /**
  * Home dashboard panel "Najbližšie audity (max 1 mesiac)" (legacy home of hygienists): audits of own branches.
@@ -17,12 +17,12 @@ class UpcomingAudits extends \Hubleto\Erp\Controller
 
     $this->viewParams['audits'] = $this->getModel(Audit::class)->record->prepareReadQuery()
       ->with(['BRANCH'])
-      ->where('hlthcr_audits.date_executed', '>=', date('Y-m-d'))
-      ->where('hlthcr_audits.date_executed', '<=', date('Y-m-d', strtotime('+1 month')))
-      ->orderBy('hlthcr_audits.date_executed', 'asc')
+      ->where('ohs_audits.date_executed', '>=', date('Y-m-d'))
+      ->where('ohs_audits.date_executed', '<=', date('Y-m-d', strtotime('+1 month')))
+      ->orderBy('ohs_audits.date_executed', 'asc')
       ->get()
       ->toArray()
     ;
-    $this->setView('@Hubleto:App:External:WaiBlue:HlthcrAudits/Boards/UpcomingAudits.twig');
+    $this->setView('@Hubleto:App:External:WaiBlue:OhsAudits/Boards/UpcomingAudits.twig');
   }
 }

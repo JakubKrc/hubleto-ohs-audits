@@ -1,39 +1,39 @@
 <?php
 
-namespace Hubleto\App\External\WaiBlue\HlthcrAudits;
+namespace Hubleto\App\External\WaiBlue\OhsAudits;
 
 use Hubleto\App\Community\Customers\Models\Customer;
 use Hubleto\App\Community\Workflow\Models\Workflow as WorkflowModel;
 use Hubleto\App\Community\Workflow\Models\WorkflowStep;
-use Hubleto\App\External\WaiBlue\HlthcrBranches\Models\Branch;
-use Hubleto\App\External\WaiBlue\HlthcrCore\Services\DemoData;
+use Hubleto\App\External\WaiBlue\OhsBranches\Models\Branch;
+use Hubleto\App\External\WaiBlue\OhsCore\Services\DemoData;
 
-class Loader extends \Hubleto\App\External\WaiBlue\HlthcrCore\HlthcrApp
+class Loader extends \Hubleto\App\External\WaiBlue\OhsCore\OhsApp
 {
   // Tags of the audit workflow steps: open or closed, what both legacy apps share.
-  const STEP_OPEN = 'hlthcr-audit-open';
-  const STEP_CLOSED = 'hlthcr-audit-closed';
+  const STEP_OPEN = 'ohs-audit-open';
+  const STEP_CLOSED = 'ohs-audit-closed';
 
   public function init(): void
   {
     parent::init();
 
     $this->router()->get([
-      '/^hlthcr-audits\/?$/' => Controllers\Audits::class,
-      '/^hlthcr-audits\/settings\/?$/' => Controllers\Settings::class,
-      '/^hlthcr-audits\/boards\/upcoming-audits\/?$/' => Controllers\Boards\UpcomingAudits::class,
+      '/^ohs\/audits\/?$/' => Controllers\Audits::class,
+      '/^ohs\/audits\/settings\/?$/' => Controllers\Settings::class,
+      '/^ohs\/audits\/boards\/upcoming-audits\/?$/' => Controllers\Boards\UpcomingAudits::class,
     ]);
-    $this->router()->crud('hlthcr-audits/audits', Controllers\Audits::class);
+    $this->router()->crud('ohs/audits/audits', Controllers\Audits::class);
 
     $this->addSearchSwitch('a', 'audits');
 
     /** @var \Hubleto\App\Community\Calendar\Manager $calendarManager */
     $calendarManager = $this->getService(\Hubleto\App\Community\Calendar\Manager::class);
-    $calendarManager->addCalendar($this, 'hlthcr-audits', Calendar::class);
+    $calendarManager->addCalendar($this, 'ohs-audits', Calendar::class);
 
     /** @var \Hubleto\App\Community\Dashboards\Manager $dashboardManager */
     $dashboardManager = $this->getService(\Hubleto\App\Community\Dashboards\Manager::class);
-    $dashboardManager->addBoard($this, $this->translate('Upcoming audits'), 'hlthcr-audits/boards/upcoming-audits');
+    $dashboardManager->addBoard($this, $this->translate('Upcoming audits'), 'ohs/audits/boards/upcoming-audits');
 
     /** @var \Hubleto\App\Community\Workflow\Manager $workflowManager */
     $workflowManager = $this->getService(\Hubleto\App\Community\Workflow\Manager::class);
@@ -122,9 +122,9 @@ class Loader extends \Hubleto\App\External\WaiBlue\HlthcrCore\HlthcrApp
     $auditsQuery = $this->getModel(Models\Audit::class)->record->prepareReadQuery()->with(['BRANCH']);
     foreach ($expressions as $expression) {
       $auditsQuery = $auditsQuery->where(function ($matchingAudit) use ($expression) {
-        $matchingAudit->orWhere('hlthcr_audits.note', 'like', '%' . $expression . '%');
-        $matchingAudit->orWhereIn('hlthcr_audits.id_branch', function ($matchingBranches) use ($expression) {
-          $matchingBranches->select('id')->from('hlthcr_branches')->where('name', 'like', '%' . $expression . '%');
+        $matchingAudit->orWhere('ohs_audits.note', 'like', '%' . $expression . '%');
+        $matchingAudit->orWhereIn('ohs_audits.id_branch', function ($matchingBranches) use ($expression) {
+          $matchingBranches->select('id')->from('ohs_branches')->where('name', 'like', '%' . $expression . '%');
         });
       });
     }
@@ -134,7 +134,7 @@ class Loader extends \Hubleto\App\External\WaiBlue\HlthcrCore\HlthcrApp
       $results[] = [
         'id' => $audit['id'],
         'label' => $this->translate('Audit') . ' ' . date('d.m.Y', strtotime($audit['date_executed'])),
-        'url' => 'hlthcr-audits/audits/' . $audit['id'],
+        'url' => 'ohs/audits/audits/' . $audit['id'],
         'description' => $audit['BRANCH']['name'] ?? '',
       ];
     }
@@ -146,9 +146,9 @@ class Loader extends \Hubleto\App\External\WaiBlue\HlthcrCore\HlthcrApp
     return '
       ' . $this->secondSidebarTitle() . '
       <div class="app-sidebar-buttons">
-        ' . $this->secondSidebarButton('hlthcr-audits/audits', 'fas fa-clipboard-check', $this->translate('Audits')) . '
+        ' . $this->secondSidebarButton('ohs/audits/audits', 'fas fa-clipboard-check', $this->translate('Audits')) . '
         ' . $this->secondSidebarButton('calendar', 'fas fa-calendar-days', $this->translate('Calendar')) . '
-        ' . $this->secondSidebarButton('hlthcr-audits/settings', 'fas fa-cog', $this->translate('Settings')) . '
+        ' . $this->secondSidebarButton('ohs/audits/settings', 'fas fa-cog', $this->translate('Settings')) . '
       </div>
     ';
   }
@@ -168,7 +168,7 @@ class Loader extends \Hubleto\App\External\WaiBlue\HlthcrCore\HlthcrApp
    * For the first branch of each demo client: an audit from last year and a planned one in two weeks (FAKE data).
    * Records are inserted directly: the model rules use the logged-in user, and there is none on the command line.
    */
-  public function generateHlthcrDemoData(): void
+  public function generateOhsDemoData(): void
   {
     /** @var Models\Audit */
     $mAudit = $this->getModel(Models\Audit::class);
