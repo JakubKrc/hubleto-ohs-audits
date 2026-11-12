@@ -7,6 +7,12 @@
         "wai-blue/hubleto-ohs-branches": "dev-main",
         "wai-blue/hubleto-ohs-clients": "dev-main"
     },
+    "require-dev": {
+        "hubleto/framework": "*",
+        "hubleto/erp": "*",
+        "hubleto/assets": "*",
+        "hubleto/react-ui": "*"
+    },
     "autoload": {
         "psr-4": {
             "Hubleto\\App\\External\\WaiBlue\\OhsAudits\\": "src"
