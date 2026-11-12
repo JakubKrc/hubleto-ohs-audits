@@ -48,12 +48,14 @@ class Audit extends \Hubleto\Erp\RecordManager
 
   public function prepareLookupQuery(string $search): mixed
   {
-    return parent::prepareLookupQuery($search);
+    $query = parent::prepareLookupQuery($search);
+    return $this->filterByBranchFromUrl($query);
   }
 
   public function addUrlFiltersToQuery(mixed $query): mixed
   {
     $query = parent::addUrlFiltersToQuery($query);
+    $query = $this->filterByBranchFromUrl($query);
 
     $hubleto = \Hubleto\Erp\Loader::getGlobalApp();
     $filters = $hubleto->router()->urlParamAsArray('filters');

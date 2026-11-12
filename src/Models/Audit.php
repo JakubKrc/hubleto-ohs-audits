@@ -10,6 +10,7 @@ use Hubleto\App\External\WaiBlue\OhsBranches\Models\Branch;
 use Hubleto\App\External\WaiBlue\OhsCore\Services\MonthDates;
 use Hubleto\Framework\Db\Column\Boolean;
 use Hubleto\Framework\Db\Column\Date;
+use Hubleto\Framework\Db\Column\DateTime;
 use Hubleto\Framework\Exceptions\RecordSaveException;
 use Hubleto\Framework\Db\Column\Lookup;
 use Hubleto\Framework\Db\Column\Text;
@@ -29,7 +30,6 @@ class Audit extends \Hubleto\Erp\Model
 {
 
   const WORKFLOW_GROUP = 'ohs_audits';
-  const DEFAULT_AUDIT_INTERVAL_MONTHS = 24;
 
   public string $table = 'ohs_audits';
   public string $recordManagerClass = RecordManagers\Audit::class;
@@ -68,6 +68,7 @@ class Audit extends \Hubleto\Erp\Model
         ->setDefaultVisible()
         ->setDefaultValue($this->authProvider()->getUserId())
       ,
+      'date_created' => (new DateTime($this, $this->translate('Created')))->setReadonly()->setDefaultValue(date("Y-m-d H:i:s")),
       'id_workflow' => (new Lookup($this, $this->translate('Workflow'), Workflow::class))->setReadonly(),
       'id_workflow_step' => (new Lookup($this, $this->translate('State'), WorkflowStep::class))
         ->setDefaultVisible()
@@ -143,7 +144,7 @@ class Audit extends \Hubleto\Erp\Model
     return parent::onAfterCreate($savedRecord);
   }
 
-  // Unless typed, "valid to" is the audit date plus the audit interval of the branch's client, also after the date changes.
+  // Left empty, "valid to" is the audit date plus the audit interval of the branch's client.
   private function fillValidTo(array $record): array
   {
     $hasAuditDate = !empty($record['date_executed']);
@@ -151,7 +152,7 @@ class Audit extends \Hubleto\Erp\Model
 
     if ($hasAuditDate && $emptyValidTo) {
       $intervalMonths = $this->getAuditIntervalMonths((int) ($record['id_branch'] ?? 0));
-      $record['date_valid_to'] = date("Y-m-d", strtotime((string) $record['date_executed']." +".$intervalMonths." months"));;
+      $record['date_valid_to'] = MonthDates::addMonths((string) $record['date_executed'], $intervalMonths);
     }
 
     $isValidBeforeAudit = $hasAuditDate && !empty($record['date_valid_to']) && $record['date_valid_to'] < $record['date_executed'];
@@ -164,19 +165,18 @@ class Audit extends \Hubleto\Erp\Model
   public function getAuditIntervalMonths(int $idBranch): int
   {
     /** @var CustomerColumns */
-    // $customerColumns = $this->getService(CustomerColumns::class);
-    // $defaultMonths = $customerColumns->getDefaultAuditIntervalMonths();
+    $customerColumns = $this->getService(CustomerColumns::class);
+    $defaultMonths = $customerColumns->getDefaultAuditIntervalMonths();
 
     /** @var Branch */
     $branch = $this->getModel(Branch::class)->record->where('id', $idBranch)->first();
-    $branchMonths = $branch ? (int) $branch->ohs_audit_interval_months : 0;
-    if ($branchMonths > 0) return (int) $branchMonths;
+    if (!$branch) return $defaultMonths;
 
     /** @var Customer */
     $customer = $this->getModel(Customer::class)->record->where('id', $branch->id_customer)->first();
     $clientMonths = $customer ? (int) $customer->ohs_audit_interval_months : 0;
     if ($clientMonths > 0) return $clientMonths;
 
-    return self::DEFAULT_AUDIT_INTERVAL_MONTHS;
+    return $defaultMonths;
   }
 }
