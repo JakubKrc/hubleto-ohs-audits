@@ -43,24 +43,17 @@ class Audit extends \Hubleto\Erp\RecordManager
 
   public function prepareReadQuery(mixed $query = null, int $level = 0, array|null $includeRelations = null): mixed
   {
-    $query = parent::prepareReadQuery($query, $level, $includeRelations);
-    $query = $this->restrictToWorkRecordReaders($query);
-    return $this->restrictToVisibleBranches($query);
+    return parent::prepareReadQuery($query, $level, $includeRelations);;
   }
 
-  // Dropdowns too: Hubleto's lookup query does not go through prepareReadQuery.
   public function prepareLookupQuery(string $search): mixed
   {
-    $query = parent::prepareLookupQuery($search);
-    $query = $this->restrictToWorkRecordReaders($query);
-    $query = $this->restrictToVisibleBranches($query);
-    return $this->filterByBranchFromUrl($query);
+    return parent::prepareLookupQuery($search);
   }
 
   public function addUrlFiltersToQuery(mixed $query): mixed
   {
     $query = parent::addUrlFiltersToQuery($query);
-    $query = $this->filterByBranchFromUrl($query);
 
     $hubleto = \Hubleto\Erp\Loader::getGlobalApp();
     $filters = $hubleto->router()->urlParamAsArray('filters');

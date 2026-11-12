@@ -25,13 +25,11 @@ use Hubleto\App\Community\Workflow\Models\WorkflowStep;
  * the audit date plus the client's audit interval, unless typed. Its state is a workflow step: open or closed,
  * what both legacy apps share (MioMed closes an audit, Medison sets it "Ukončený").
  */
-class Audit extends \Hubleto\App\External\WaiBlue\OhsCore\Models\OhsModel
+class Audit extends \Hubleto\Erp\Model
 {
-  use RefusesUnknownUser;
-  use EmptyDatesAsNull;
-  use StaysInOwnWorkflow;
 
   const WORKFLOW_GROUP = 'ohs_audits';
+  const DEFAULT_AUDIT_INTERVAL_MONTHS = 24;
 
   public string $table = 'ohs_audits';
   public string $recordManagerClass = RecordManagers\Audit::class;
@@ -55,17 +53,20 @@ class Audit extends \Hubleto\App\External\WaiBlue\OhsCore\Models\OhsModel
         ->setRequired()
         ->setDefaultVisible()
       ,
-      'date_executed' => (new Date($this, $this->translate('Audit date')))->setRequired()->setDefaultVisible(),
+      'date_executed' => (new Date($this, $this->translate('Audit date')))
+        ->setRequired()
+        ->setDefaultVisible()
+        ->setDefaultValue(date("Y-m-d"))
+      ,
       'date_valid_to' => (new Date($this, $this->translate('Valid to')))
         ->setDefaultVisible()
         ->setHint($this->translate('Left empty, it is the audit date plus the audit interval of the client.'))
       ,
-      // Set when the user typed the validity, so it is not recomputed from the audit date.
-      'valid_to_typed' => (new Boolean($this, $this->translate('Validity typed'))),
       'note' => (new Text($this, $this->translate('Note / purpose of the visit')))->setDefaultVisible(),
       'id_hygienist' => (new Lookup($this, $this->translate('Hygienist'), User::class))
         ->setEndpoint(UserLookup::endpointFor(Roles::HYGIENIST, 'id_hygienist'))
         ->setDefaultVisible()
+        ->setDefaultValue($this->authProvider()->getUserId())
       ,
       'id_workflow' => (new Lookup($this, $this->translate('Workflow'), Workflow::class))->setReadonly(),
       'id_workflow_step' => (new Lookup($this, $this->translate('State'), WorkflowStep::class))
@@ -82,8 +83,6 @@ class Audit extends \Hubleto\App\External\WaiBlue\OhsCore\Models\OhsModel
     $description->ui['orderBy'] = ['field' => 'date_executed', 'direction' => 'desc'];
     $description->show(['header', 'fulltextSearch', 'columnSearch', 'moreActionsButton']);
     $description->hide(['footer']);
-    // An internal flag of the validity rule, not a column for users.
-    $description->hideColumns(['valid_to_typed']);
     // In the branch's tab the branch is known, so its column is left out (both legacy apps).
     if ($this->router()->urlParamAsInteger('idBranch') > 0) $description->hideColumns(['id_branch']);
 
@@ -116,13 +115,12 @@ class Audit extends \Hubleto\App\External\WaiBlue\OhsCore\Models\OhsModel
   public function onBeforeCreate(array $record): array
   {
     $record = parent::onBeforeCreate($record);
-    $record = $this->emptyDatesAsNull($record);
-    if (empty($record['id_hygienist'])) {
-      $record['id_hygienist'] = $this->authProvider()->getUserId();
-    }
-    $this->refuseUnknownUser($record, 'id_hygienist');
-    $record['valid_to_typed'] = !empty($record['date_valid_to']);
-    $record = $this->dropSentWorkflow($record);
+    // $record = $this->dropSentWorkflow($record);
+    // New audits start in the first step of the audit workflow ("open").
+    /** @var Workflow */
+    $mWorkflow = $this->getModel(Workflow::class);
+    $record = $mWorkflow->applyDefaultWorkflow($record, self::WORKFLOW_GROUP);
+
     return $this->fillValidTo($record);
   }
 
@@ -130,14 +128,11 @@ class Audit extends \Hubleto\App\External\WaiBlue\OhsCore\Models\OhsModel
   public function onBeforeUpdate(array $record): array
   {
     $record = parent::onBeforeUpdate($record);
-    $record = $this->emptyDatesAsNull($record);
-    $this->refuseUnknownUser($record, 'id_hygienist');
-    $this->refuseWorkflowOfOtherGroup($record, self::WORKFLOW_GROUP);
+    // $this->refuseWorkflowOfOtherGroup($record, self::WORKFLOW_GROUP);
 
     $originalAudit = $this->record->where('id', (int) $record['id'])->first();
     if ($originalAudit) {
       $record['id_branch'] = $originalAudit->id_branch;
-      $record['valid_to_typed'] = $this->isValidToTyped($record, $originalAudit);
     }
 
     return $this->fillValidTo($record);
@@ -145,43 +140,18 @@ class Audit extends \Hubleto\App\External\WaiBlue\OhsCore\Models\OhsModel
 
   public function onAfterCreate(array $savedRecord): array
   {
-    $savedRecord = parent::onAfterCreate($savedRecord);
-
-    // New audits start in the first step of the audit workflow ("open").
-    /** @var Workflow */
-    $mWorkflow = $this->getModel(Workflow::class);
-    $savedRecord = $mWorkflow->applyDefaultWorkflow($savedRecord, self::WORKFLOW_GROUP);
-
-    // Only the workflow columns: a whole update would run the validity rule again.
-    $this->record->where('id', $savedRecord['id'])->update([
-      'id_workflow' => $savedRecord['id_workflow'] ?? null,
-      'id_workflow_step' => $savedRecord['id_workflow_step'] ?? null,
-    ]);
-    $this->logFirstWorkflowStep($savedRecord);
-
-    return $savedRecord;
-  }
-
-  // The validity is typed when this save changes it to a value; emptying it lets it be computed again.
-  private function isValidToTyped(array $record, mixed $originalAudit): bool
-  {
-    if (!array_key_exists('date_valid_to', $record)) return (bool) $originalAudit->valid_to_typed;
-
-    $submittedDate = (string) ($record['date_valid_to'] ?? '');
-    $originalDate = (string) ($originalAudit->date_valid_to ?? '');
-    if ($submittedDate == $originalDate) return (bool) $originalAudit->valid_to_typed;
-    return $submittedDate != '';
+    return parent::onAfterCreate($savedRecord);
   }
 
   // Unless typed, "valid to" is the audit date plus the audit interval of the branch's client, also after the date changes.
   private function fillValidTo(array $record): array
   {
     $hasAuditDate = !empty($record['date_executed']);
-    $isTyped = (bool) ($record['valid_to_typed'] ?? false);
+    $emptyValidTo = empty($record["date_valid_to"]);
 
-    if ($hasAuditDate && !$isTyped) {
+    if ($hasAuditDate && $emptyValidTo) {
       $intervalMonths = $this->getAuditIntervalMonths((int) ($record['id_branch'] ?? 0));
-      $record['date_valid_to'] = MonthDates::addMonths((string) $record['date_executed'], $intervalMonths);
+      $record['date_valid_to'] = date("Y-m-d", strtotime((string) $record['date_executed']." +".$intervalMonths." months"));;
     }
 
     $isValidBeforeAudit = $hasAuditDate && !empty($record['date_valid_to']) && $record['date_valid_to'] < $record['date_executed'];
@@ -194,15 +164,19 @@ class Audit extends \Hubleto\App\External\WaiBlue\OhsCore\Models\OhsModel
   public function getAuditIntervalMonths(int $idBranch): int
   {
     /** @var CustomerColumns */
-    $customerColumns = $this->getService(CustomerColumns::class);
-    $defaultMonths = $customerColumns->getDefaultAuditIntervalMonths();
+    // $customerColumns = $this->getService(CustomerColumns::class);
+    // $defaultMonths = $customerColumns->getDefaultAuditIntervalMonths();
 
+    /** @var Branch */
     $branch = $this->getModel(Branch::class)->record->where('id', $idBranch)->first();
-    if (!$branch) return $defaultMonths;
+    $branchMonths = $branch ? (int) $branch->ohs_audit_interval_months : 0;
+    if ($branchMonths > 0) return (int) $branchMonths;
 
+    /** @var Customer */
     $customer = $this->getModel(Customer::class)->record->where('id', $branch->id_customer)->first();
     $clientMonths = $customer ? (int) $customer->ohs_audit_interval_months : 0;
     if ($clientMonths > 0) return $clientMonths;
-    return $defaultMonths;
+
+    return self::DEFAULT_AUDIT_INTERVAL_MONTHS;
   }
 }

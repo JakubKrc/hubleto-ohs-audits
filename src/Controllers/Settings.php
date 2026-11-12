@@ -15,12 +15,6 @@ class Settings extends \Hubleto\Erp\Controller
   public function prepareView(): void
   {
     parent::prepareView();
-
-    // Only administrators and managers change workflows (the record write rules).
-    /** @var \Hubleto\App\External\WaiBlue\OhsCore\Services\Roles */
-    $roles = $this->getService(\Hubleto\App\External\WaiBlue\OhsCore\Services\Roles::class);
-    $this->viewParams['mayEditWorkflows'] = $roles->isActiveUserAdministratorOrManager();
-
     $this->setView('@Hubleto:App:External:WaiBlue:OhsAudits/Settings.twig');
   }
 }

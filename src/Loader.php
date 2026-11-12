@@ -56,7 +56,6 @@ class Loader extends \Hubleto\App\External\WaiBlue\OhsCore\OhsApp
    * Creates the audit workflow, or adds the steps an older install does not have yet.
    * The first step is the default for new audits.
    */
-  // Public for the migration Audit_0005: "php hubleto migrate" does not run installApp().
   public function installAuditWorkflow(): void
   {
     /** @var WorkflowModel */
