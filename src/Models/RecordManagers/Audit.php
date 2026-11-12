@@ -8,14 +8,12 @@ use Hubleto\App\Community\Workflow\Models\RecordManagers\Workflow;
 use Hubleto\App\Community\Workflow\Models\RecordManagers\WorkflowStep;
 use Hubleto\App\External\WaiBlue\OhsBranches\Models\RecordManagers\Branch;
 use Hubleto\App\External\WaiBlue\OhsBranches\Models\RecordManagers\Traits\BelongsToBranch;
-use Hubleto\App\External\WaiBlue\OhsCore\Models\RecordManagers\Traits\WorkRecord;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Audit extends \Hubleto\Erp\RecordManager
 {
   use DefaultOrder;
   use BelongsToBranch;
-  use WorkRecord;
 
   public $table = 'ohs_audits';
 
